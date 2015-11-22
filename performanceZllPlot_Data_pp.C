@@ -298,10 +298,12 @@ void performanceZllPlot_Data_pp(const char* inputFile, const char* outputFile, c
             selection = selection && "matched_eleIndex_1 > -1    && matched_eleIndex_2 > -1";
             selection = selection && "phoSigmaIEtaIEta_1 > 0.002 && phoSigmaIEtaIEta_2 > 0.002";  // spike rejection
             selection = selection && "phoHoverE_1 < 0.1          && phoHoverE_2 < 0.1";
+            selection = selection && "phoSigmaIEtaIEta_1 < 0.01  && phoSigmaIEtaIEta_2 < 0.01";   // phoSigmaIEtaIEta cut
 
             TCut selection_Barrel = "1";    // no extra selection at the moment
             TCut selection_Endcap = "1";    // no extra selection at the moment
 
+            /*
             ///// MATCHED ELECTRON SELECTION BLOCK
             ///// apply the Zee cuts to matched electrons
             ///// diele is added as friend to t_dipho.
@@ -324,6 +326,7 @@ void performanceZllPlot_Data_pp(const char* inputFile, const char* outputFile, c
             selection_Endcap = selection_Endcap && "eleD0_1[matched_eleIndex_1]<0.242                  && eleD0_1[matched_eleIndex_2]<0.242";
             selection_Endcap = selection_Endcap && "eleDz_1[matched_eleIndex_1]<0.921                  && eleDz_1[matched_eleIndex_2]<0.921";
             ///// MATCHED ELECTRON SELECTION BLOCK
+             */
 
             if (j==0){
                 TCut selection_Barrel_eta = Form(" abs(phoEta_1) < %f && abs(phoEta_2) < %f", cutetaBarrel, cutetaBarrel);
