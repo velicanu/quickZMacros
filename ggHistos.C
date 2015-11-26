@@ -1,4 +1,5 @@
 #include "ggTree.h"
+#include "jetTree.h"
 
 bool goodMuon(int imu) {
    if(muChi2NDF->at(imu)<10
@@ -40,21 +41,32 @@ bool goodElectron(int i) {
  else return false;
 }
 
-void ggHistos(TString infilename="HiForest.root", TString outfilename="histos.root") {
+void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.root") {
 
  TH1::SetDefaultSumw2();
 
- typedef struct {
-   Float_t mass, pt, rapidity, eta, phi;
-   Int_t charge;
- } CAND;
- static CAND Zmumu;
- static CAND Zee;
+ int Ztype; //type 1 muon, type 2 electron
+ float Zmass, Zpt, Zeta, Zrapidity, Zphi;
+ int Zcharge;
 
- TTree *mutree = new TTree("mutree","Zmumu candidates from ggHiNtuplizer");
- mutree->Branch("Zmumu",&Zmumu,"mass:pt:rapidity:eta:phi/F:charge/I");
- TTree *eltree = new TTree("eltree","Zee candidates from ggHiNtuplizer");
- eltree->Branch("Zee",&Zee,"mass:pt:rapidity:eta:phi/F:charge/I");
+ int njet;
+ float jetpt[20], jeteta[20], jetphi[20]; 
+
+ TTree *ztree = new TTree("ztree","Z boson candidate events");
+ ztree->Branch("run",	&run,	"run/I");
+ ztree->Branch("event",	&event,	"event/I");
+ ztree->Branch("lumis",	&lumis,	"lumis/I");
+ ztree->Branch("Ztype",	&Ztype,	"Ztype/I");
+ ztree->Branch("Zmass",	&Zmass,	"Zmass/F");
+ ztree->Branch("Zpt",	&Zpt,	"Zpt/F");
+ ztree->Branch("Zeta",	&Zeta,	"Zeta/F");
+ ztree->Branch("Zphi",	&Zphi,	"Zphi/F");
+ ztree->Branch("Zrapidity",	&Zrapidity,	"Zrapidity/F");
+ ztree->Branch("Zcharge",	&Zcharge,	"Zcharge/I");
+ ztree->Branch("njet",	&njet,	"njet/I");
+ ztree->Branch("jetpt",	&jetpt,	"jetpt[njet]/F");
+ ztree->Branch("jeteta",	&jeteta,	"jeteta[njet]/F");
+ ztree->Branch("jetphi",	&jetphi,	"jetphi[njet]/F");
 
  const int nPtBins = 13;
  const double PtBins[nPtBins+1]={0,2.5,5.0,7.5,10.0,12.5,15.0,20,30,40,50,70,100,150};
@@ -81,19 +93,30 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="histos.ro
 
  TFile *fout = new TFile(outfilename,"recreate");
 
- TTree *inTree = (TTree*)fin.Get("ggHiNtuplizer/EventTree");
- if(!inTree){
+ TTree *inggTree = (TTree*)fin.Get("ggHiNtuplizer/EventTree");
+ if(!inggTree){
     cout<<"Could not access tree!"<<endl;
     return;
  }
- initTree(inTree);
+ initggTree(inggTree);
 
- int nEv = inTree->GetEntries();
+ //TTree *injetTree = (TTree*)fin.Get("ak4PFJetAnalyzer/t");
+ TTree *injetTree = (TTree*)fin.Get("akPu4CaloJetAnalyzer/t");
+ if(!injetTree){
+    cout<<"Could not access tree!"<<endl;
+    return;
+ }
+ initjetTree(injetTree);
+
+ int nEv = inggTree->GetEntries();
 
  for (int j=0; j<nEv; j++) {
 
-   inTree->GetEntry(j);
-   if(j%40000 == 0) cout << "Processing event: " << j << endl;
+   inggTree->GetEntry(j);
+   injetTree->GetEntry(j);
+   if(j%20000 == 0) cout << "Processing event: " << j << endl;
+   bool flag = 0;
+   njet = 0;
 
    for(int i1 = 0; i1 < nMu; i1++) {
 
@@ -110,13 +133,14 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="histos.ro
 
 	    if(pair.M()>60 && pair.M()<120) {
 
-	     Zmumu.mass = pair.M();
-	     Zmumu.pt = pair.Pt();
-	     Zmumu.rapidity = pair.Rapidity();
-	     Zmumu.eta = pair.Eta();
-	     Zmumu.phi = pair.Phi();
-	     Zmumu.charge = muCharge->at(i1) + muCharge->at(i2);
-	     mutree->Fill();
+             Ztype = 1;
+	     Zmass = pair.M();
+	     Zpt = pair.Pt();
+	     Zrapidity = pair.Rapidity();
+	     Zeta = pair.Eta();
+	     Zphi = pair.Phi();
+	     Zcharge = muCharge->at(i1) + muCharge->at(i2);
+	     flag = 1;
 
              if(muCharge->at(i1) != muCharge->at(i2)) {
 		mmMass->Fill(pair.M());
@@ -150,13 +174,14 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="histos.ro
 
 	    if(pair.M()>60 && pair.M()<120) {
 
-	     Zee.mass = pair.M();
-	     Zee.pt = pair.Pt();
-	     Zee.rapidity = pair.Rapidity();
-	     Zee.eta = pair.Eta();
-	     Zee.phi = pair.Phi();
-	     Zee.charge = eleCharge->at(i1) + eleCharge->at(i2);
-	     eltree->Fill();
+             Ztype = 2;
+	     Zmass = pair.M();
+	     Zpt = pair.Pt();
+	     Zrapidity = pair.Rapidity();
+	     Zeta = pair.Eta();
+	     Zphi = pair.Phi();
+	     Zcharge = eleCharge->at(i1) + eleCharge->at(i2);
+	     flag = 1;
 
              if(eleCharge->at(i1) != eleCharge->at(i2)) {
 		eeMass->Fill(pair.M());
@@ -164,6 +189,7 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="histos.ro
 		eeY->Fill(pair.Rapidity());
 		eePhi->Fill(pair.Phi());
 	        nElPair++;
+		if(pair.Pt() > 150) cout << "run " << run << " lumi " << lumis << " event " << event << endl;
 	     }
 	     else {
 		eeMassSS->Fill(pair.M());
@@ -174,6 +200,21 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="histos.ro
        }
     }
    } //end of electron loop
+
+   for(int ij=0; ij<nref; ij++) {
+
+     if(jtpt[ij]>30) {
+
+	jetpt[njet] = jtpt[ij];
+	jeteta[njet] = jteta[ij];
+	jetphi[njet] = jtphi[ij];
+	njet++;
+
+     }
+
+   } //end of jet loop
+
+   if(flag) ztree->Fill();
 
  } //end of loop over events
 
@@ -189,17 +230,14 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="histos.ro
    eePt->SetBinError(i+1,eePt->GetBinError(i+1)/width);
  }
 
- cout << mmMass->GetEntries() << endl;
  cout << "Number of muon pairs " << nMuPair << endl;
  cout << "same sign = " << mmMassSS->GetEntries() << endl << endl;
 
- cout << eeMass->GetEntries() << endl;
  cout << "Number of electron pairs " << nElPair << endl;
  cout << "same sign = " << eeMassSS->GetEntries() << endl << endl;
 
  fout->cd();
- mutree->Write();
- eltree->Write();
+ ztree->Write();
  mmMass->Write();
  mmMassSS->Write();
  mmPt->Write();

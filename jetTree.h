@@ -1,0 +1,175 @@
+   Int_t           evt;
+   Float_t         b;
+   Int_t           nref;
+   Float_t         rawpt[50];   //[nref]
+   Float_t         jtpt[50];   //[nref]
+   Float_t         jteta[50];   //[nref]
+   Float_t         jty[50];   //[nref]
+   Float_t         jtphi[50];   //[nref]
+   Float_t         jtpu[50];   //[nref]
+   Float_t         jtm[50];   //[nref]
+   Float_t         discr_fr01[50];   //[nref]
+   Float_t         trackMax[50];   //[nref]
+   Float_t         trackSum[50];   //[nref]
+   Int_t           trackN[50];   //[nref]
+   Float_t         trackHardSum[50];   //[nref]
+   Int_t           trackHardN[50];   //[nref]
+   Float_t         chargedMax[50];   //[nref]
+   Float_t         chargedSum[50];   //[nref]
+   Int_t           chargedN[50];   //[nref]
+   Float_t         chargedHardSum[50];   //[nref]
+   Int_t           chargedHardN[50];   //[nref]
+   Float_t         photonMax[50];   //[nref]
+   Float_t         photonSum[50];   //[nref]
+   Int_t           photonN[50];   //[nref]
+   Float_t         photonHardSum[50];   //[nref]
+   Int_t           photonHardN[50];   //[nref]
+   Float_t         neutralMax[50];   //[nref]
+   Float_t         neutralSum[50];   //[nref]
+   Int_t           neutralN[50];   //[nref]
+   Float_t         eMax[50];   //[nref]
+   Float_t         eSum[50];   //[nref]
+   Int_t           eN[50];   //[nref]
+   Float_t         muMax[50];   //[nref]
+   Float_t         muSum[50];   //[nref]
+   Int_t           muN[50];   //[nref]
+   Float_t         discr_ssvHighEff[50];   //[nref]
+   Float_t         discr_ssvHighPur[50];   //[nref]
+   Float_t         discr_csvMva[50];   //[nref]
+   Float_t         discr_csvSimple[50];   //[nref]
+   Float_t         discr_muByIp3[50];   //[nref]
+   Float_t         discr_muByPt[50];   //[nref]
+   Float_t         discr_prob[50];   //[nref]
+   Float_t         discr_probb[50];   //[nref]
+   Float_t         discr_tcHighEff[50];   //[nref]
+   Float_t         discr_tcHighPur[50];   //[nref]
+   Float_t         ndiscr_ssvHighEff[50];   //[nref]
+   Float_t         ndiscr_ssvHighPur[50];   //[nref]
+   Float_t         ndiscr_csvSimple[50];   //[nref]
+   Float_t         ndiscr_muByPt[50];   //[nref]
+   Float_t         ndiscr_prob[50];   //[nref]
+   Float_t         ndiscr_probb[50];   //[nref]
+   Float_t         ndiscr_tcHighEff[50];   //[nref]
+   Float_t         ndiscr_tcHighPur[50];   //[nref]
+   Float_t         pdiscr_csvSimple[50];   //[nref]
+   Float_t         pdiscr_prob[50];   //[nref]
+   Float_t         pdiscr_probb[50];   //[nref]
+   Int_t           nsvtx[50];   //[nref]
+   Int_t           svtxntrk[50];   //[nref]
+   Float_t         svtxdl[50];   //[nref]
+   Float_t         svtxdls[50];   //[nref]
+   Float_t         svtxdl2d[50];   //[nref]
+   Float_t         svtxdls2d[50];   //[nref]
+   Float_t         svtxm[50];   //[nref]
+   Float_t         svtxpt[50];   //[nref]
+   Int_t           nIPtrk[50];   //[nref]
+   Int_t           nselIPtrk[50];   //[nref]
+   Int_t           nIP;
+   Int_t           ipJetIndex[10000];   //[nIP]
+   Float_t         ipPt[10000];   //[nIP]
+   Float_t         ipProb0[10000];   //[nIP]
+   Float_t         ipProb1[10000];   //[nIP]
+   Float_t         ip2d[10000];   //[nIP]
+   Float_t         ip2dSig[10000];   //[nIP]
+   Float_t         ip3d[10000];   //[nIP]
+   Float_t         ip3dSig[10000];   //[nIP]
+   Float_t         ipDist2Jet[10000];   //[nIP]
+   Float_t         ipDist2JetSig[10000];   //[nIP]
+   Float_t         ipClosest2Jet[10000];   //[nIP]
+   Float_t         mue[50];   //[nref]
+   Float_t         mupt[50];   //[nref]
+   Float_t         mueta[50];   //[nref]
+   Float_t         muphi[50];   //[nref]
+   Float_t         mudr[50];   //[nref]
+   Float_t         muptrel[50];   //[nref]
+   Int_t           muchg[50];   //[nref]
+
+void initjetTree(TTree *tree) {
+
+   tree->SetBranchAddress("evt", &evt);
+   tree->SetBranchAddress("b", &b);
+   tree->SetBranchAddress("nref", &nref);
+   tree->SetBranchAddress("rawpt", rawpt);
+   tree->SetBranchAddress("jtpt", jtpt);
+   tree->SetBranchAddress("jteta", jteta);
+   tree->SetBranchAddress("jty", jty);
+   tree->SetBranchAddress("jtphi", jtphi);
+   tree->SetBranchAddress("jtpu", jtpu);
+   tree->SetBranchAddress("jtm", jtm);
+   tree->SetBranchAddress("discr_fr01", discr_fr01);
+   tree->SetBranchAddress("trackMax", trackMax);
+   tree->SetBranchAddress("trackSum", trackSum);
+   tree->SetBranchAddress("trackN", trackN);
+   tree->SetBranchAddress("trackHardSum", trackHardSum);
+   tree->SetBranchAddress("trackHardN", trackHardN);
+   tree->SetBranchAddress("chargedMax", chargedMax);
+   tree->SetBranchAddress("chargedSum", chargedSum);
+   tree->SetBranchAddress("chargedN", chargedN);
+   tree->SetBranchAddress("chargedHardSum", chargedHardSum);
+   tree->SetBranchAddress("chargedHardN", chargedHardN);
+   tree->SetBranchAddress("photonMax", photonMax);
+   tree->SetBranchAddress("photonSum", photonSum);
+   tree->SetBranchAddress("photonN", photonN);
+   tree->SetBranchAddress("photonHardSum", photonHardSum);
+   tree->SetBranchAddress("photonHardN", photonHardN);
+   tree->SetBranchAddress("neutralMax", neutralMax);
+   tree->SetBranchAddress("neutralSum", neutralSum);
+   tree->SetBranchAddress("neutralN", neutralN);
+   tree->SetBranchAddress("eMax", eMax);
+   tree->SetBranchAddress("eSum", eSum);
+   tree->SetBranchAddress("eN", eN);
+   tree->SetBranchAddress("muMax", muMax);
+   tree->SetBranchAddress("muSum", muSum);
+   tree->SetBranchAddress("muN", muN);
+   tree->SetBranchAddress("discr_ssvHighEff", discr_ssvHighEff);
+   tree->SetBranchAddress("discr_ssvHighPur", discr_ssvHighPur);
+   tree->SetBranchAddress("discr_csvMva", discr_csvMva);
+   tree->SetBranchAddress("discr_csvSimple", discr_csvSimple);
+   tree->SetBranchAddress("discr_muByIp3", discr_muByIp3);
+   tree->SetBranchAddress("discr_muByPt", discr_muByPt);
+   tree->SetBranchAddress("discr_prob", discr_prob);
+   tree->SetBranchAddress("discr_probb", discr_probb);
+   tree->SetBranchAddress("discr_tcHighEff", discr_tcHighEff);
+   tree->SetBranchAddress("discr_tcHighPur", discr_tcHighPur);
+   tree->SetBranchAddress("ndiscr_ssvHighEff", ndiscr_ssvHighEff);
+   tree->SetBranchAddress("ndiscr_ssvHighPur", ndiscr_ssvHighPur);
+   tree->SetBranchAddress("ndiscr_csvSimple", ndiscr_csvSimple);
+   tree->SetBranchAddress("ndiscr_muByPt", ndiscr_muByPt);
+   tree->SetBranchAddress("ndiscr_prob", ndiscr_prob);
+   tree->SetBranchAddress("ndiscr_probb", ndiscr_probb);
+   tree->SetBranchAddress("ndiscr_tcHighEff", ndiscr_tcHighEff);
+   tree->SetBranchAddress("ndiscr_tcHighPur", ndiscr_tcHighPur);
+   tree->SetBranchAddress("pdiscr_csvSimple", pdiscr_csvSimple);
+   tree->SetBranchAddress("pdiscr_prob", pdiscr_prob);
+   tree->SetBranchAddress("pdiscr_probb", pdiscr_probb);
+   tree->SetBranchAddress("nsvtx", nsvtx);
+   tree->SetBranchAddress("svtxntrk", svtxntrk);
+   tree->SetBranchAddress("svtxdl", svtxdl);
+   tree->SetBranchAddress("svtxdls", svtxdls);
+   tree->SetBranchAddress("svtxdl2d", svtxdl2d);
+   tree->SetBranchAddress("svtxdls2d", svtxdls2d);
+   tree->SetBranchAddress("svtxm", svtxm);
+   tree->SetBranchAddress("svtxpt", svtxpt);
+   tree->SetBranchAddress("nIPtrk", nIPtrk);
+   tree->SetBranchAddress("nselIPtrk", nselIPtrk);
+   tree->SetBranchAddress("nIP", &nIP);
+   tree->SetBranchAddress("ipJetIndex", ipJetIndex);
+   tree->SetBranchAddress("ipPt", ipPt);
+   tree->SetBranchAddress("ipProb0", ipProb0);
+   tree->SetBranchAddress("ipProb1", ipProb1);
+   tree->SetBranchAddress("ip2d", ip2d);
+   tree->SetBranchAddress("ip2dSig", ip2dSig);
+   tree->SetBranchAddress("ip3d", ip3d);
+   tree->SetBranchAddress("ip3dSig", ip3dSig);
+   tree->SetBranchAddress("ipDist2Jet", ipDist2Jet);
+   tree->SetBranchAddress("ipDist2JetSig", ipDist2JetSig);
+   tree->SetBranchAddress("ipClosest2Jet", ipClosest2Jet);
+   tree->SetBranchAddress("mue", mue);
+   tree->SetBranchAddress("mupt", mupt);
+   tree->SetBranchAddress("mueta", mueta);
+   tree->SetBranchAddress("muphi", muphi);
+   tree->SetBranchAddress("mudr", mudr);
+   tree->SetBranchAddress("muptrel", muptrel);
+   tree->SetBranchAddress("muchg", muchg);
+
+}

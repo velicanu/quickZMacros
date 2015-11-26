@@ -175,7 +175,7 @@ using namespace std;
    vector<float>   *muPFNeuIso;
    vector<float>   *muPFPUIso;
 
-void initTree(TTree *tree) {
+void initggTree(TTree *tree) {
 
    eleCharge = 0;
    eleChargeConsistent = 0;
