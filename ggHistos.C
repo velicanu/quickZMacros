@@ -100,8 +100,8 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.r
  }
  initggTree(inggTree);
 
- //TTree *injetTree = (TTree*)fin.Get("ak4PFJetAnalyzer/t");
- TTree *injetTree = (TTree*)fin.Get("akPu4CaloJetAnalyzer/t");
+ //TTree *injetTree = (TTree*)fin.Get("ak4PFJetAnalyzer/t"); //pp
+ TTree *injetTree = (TTree*)fin.Get("akPu4CaloJetAnalyzer/t");  //PbPb
  if(!injetTree){
     cout<<"Could not access tree!"<<endl;
     return;
@@ -115,8 +115,11 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.r
    inggTree->GetEntry(j);
    injetTree->GetEntry(j);
    if(j%20000 == 0) cout << "Processing event: " << j << endl;
-   bool flag = 0;
+   bool flagMu = 0; bool flagEle = 0;
    njet = 0;
+
+   TLorentzVector muon1, muon2;
+   TLorentzVector ele1, ele2;
 
    for(int i1 = 0; i1 < nMu; i1++) {
 
@@ -126,7 +129,6 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.r
 
           if(muPt->at(i2)>10 && fabs(muEta->at(i2))<2.4 && goodMuon(i2)) {
 
-	    TLorentzVector muon1, muon2;
 	    muon1.SetPtEtaPhiM(muPt->at(i1), muEta->at(i1), muPhi->at(i1), 0.105658);
 	    muon2.SetPtEtaPhiM(muPt->at(i2), muEta->at(i2), muPhi->at(i2), 0.105658);
             TLorentzVector pair = muon1 + muon2;
@@ -140,7 +142,7 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.r
 	     Zeta = pair.Eta();
 	     Zphi = pair.Phi();
 	     Zcharge = muCharge->at(i1) + muCharge->at(i2);
-	     flag = 1;
+	     flagMu = 1;
 
              if(muCharge->at(i1) != muCharge->at(i2)) {
 		mmMass->Fill(pair.M());
@@ -167,7 +169,6 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.r
 
           if(elePt->at(i2)>10 && fabs(eleSCEta->at(i2))<2.5 && goodElectron(i2) && (fabs(eleSCEta->at(i2))<1.4442 || fabs(eleSCEta->at(i2))>1.566)) {
 
-	    TLorentzVector ele1, ele2;
 	    ele1.SetPtEtaPhiM(elePt->at(i1), eleEta->at(i1), elePhi->at(i1), 0.000511);
 	    ele2.SetPtEtaPhiM(elePt->at(i2), eleEta->at(i2), elePhi->at(i2), 0.000511);
             TLorentzVector pair = ele1 + ele2;
@@ -181,7 +182,7 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.r
 	     Zeta = pair.Eta();
 	     Zphi = pair.Phi();
 	     Zcharge = eleCharge->at(i1) + eleCharge->at(i2);
-	     flag = 1;
+	     flagEle = 1;
 
              if(eleCharge->at(i1) != eleCharge->at(i2)) {
 		eeMass->Fill(pair.M());
@@ -203,6 +204,10 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.r
 
    for(int ij=0; ij<nref; ij++) {
 
+     float dR1 = sqrt( (muon1.Eta()-jteta[ij])*(muon1.Eta()-jteta[ij]) + (muon1.Phi()-jtphi[ij])*(muon1.Phi()-jtphi[ij]) );
+     float dR2 = sqrt( (muon2.Eta()-jteta[ij])*(muon2.Eta()-jteta[ij]) + (muon2.Phi()-jtphi[ij])*(muon2.Phi()-jtphi[ij]) );
+     if(flagMu && (dR1 < 0.1 || dR2 < 0.1)) continue;
+
      if(jtpt[ij]>30) {
 
 	jetpt[njet] = jtpt[ij];
@@ -214,7 +219,7 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.r
 
    } //end of jet loop
 
-   if(flag) ztree->Fill();
+   if(flagMu || flagEle) ztree->Fill();
 
  } //end of loop over events
 

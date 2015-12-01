@@ -15,6 +15,7 @@
 #include "TLegend.h"
 #include "TPaveStats.h"
 #include "TLatex.h"
+#include "TArrow.h"
 
 #include <iostream>
 #include <vector>

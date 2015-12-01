@@ -17,16 +17,19 @@ void ggPlots() {
  TLatex *tx = new TLatex();
  tx->SetTextFont(42);
  tx->SetTextSize(0.04);
+ tx->SetNDC(kTRUE);
 
  TLatex *tx2 = new TLatex();
  tx2->SetTextFont(62);
  tx2->SetTextSize(0.04);
+ tx2->SetNDC(kTRUE);
 
  TLatex *tx3 = new TLatex();
  tx3->SetTextFont(52);
  tx3->SetTextSize(0.04);
+ tx3->SetNDC(kTRUE);
 
- TFile *fin = TFile::Open("histos_262163-262252.root");
+ TFile *fin = TFile::Open("Zevents_pp_ZMM_29Nov.root");
 
  //dimuon mass
  TCanvas *cmm = new TCanvas();
@@ -38,7 +41,7 @@ void ggPlots() {
  mumass->Draw("ep");
  mumassSS->Draw("ep same");
 
- TLegend *lm = new TLegend(0.58,0.67,0.80,0.79);
+ TLegend *lm = new TLegend(0.16,0.60,0.37,0.72);
  lm->SetBorderSize(0);
  lm->SetTextFont(42);
  lm->SetTextSize(0.04);
@@ -46,14 +49,14 @@ void ggPlots() {
  lm->AddEntry(mumassSS,"Same charge","lp");
  lm->Draw();
 
- tx->DrawLatex(64,155,"Tight muons");
- tx->DrawLatex(64,140,"p_{T}^{#mu}>10 GeV");
- tx->DrawLatex(64,125,"|#eta^{#mu}|<2.4");
+ tx->DrawLatex(0.17,0.86,"Tight muons");
+ tx->DrawLatex(0.17,0.80,"p_{T}^{#mu} > 10 GeV");
+ tx->DrawLatex(0.17,0.74,"|#eta^{#mu}| < 2.4");
 
- tx->DrawLatex(62,176,"Express 262163 - 262254 (pp 5 TeV)");
+ tx->DrawLatex(0.13,0.94,"Prompt Skim 13 pb^{-1} (pp 5 TeV)");
 
- tx2->DrawLatex(110,155,"CMS");
- tx3->DrawLatex(102,140,"Preliminary");
+ tx2->DrawLatex(0.79,0.85,"CMS");
+ tx3->DrawLatex(0.70,0.80,"Preliminary");
 
  //dimuon pt
  TCanvas *cpm = new TCanvas();
@@ -80,7 +83,7 @@ void ggPlots() {
  eemass->Draw("ep");
  eemassSS->Draw("ep same");
 
- TLegend *le = new TLegend(0.58,0.67,0.80,0.79);
+ TLegend *le = new TLegend(0.16,0.60,0.37,0.72);
  le->SetBorderSize(0);
  le->SetTextFont(42);
  le->SetTextSize(0.04);
@@ -88,14 +91,14 @@ void ggPlots() {
  le->AddEntry(eemassSS,"Same charge","lp");
  le->Draw();
 
- tx->DrawLatex(64,35,"Medium electrons");
- tx->DrawLatex(64,32,"p_{T}^{e}>10 GeV");
- tx->DrawLatex(64,29,"|#eta^{e}|<2.5");
+ tx->DrawLatex(0.17,0.86,"Medium electrons");
+ tx->DrawLatex(0.17,0.80,"p_{T}^{e} > 10 GeV");
+ tx->DrawLatex(0.17,0.74,"|#eta^{e}| < 2.5");
 
- tx->DrawLatex(62,43,"Express 262163 - 262254 (pp 5 TeV)");
+ tx->DrawLatex(0.13,0.94,"Express 262163 - 262274 (pp 5 TeV)");
 
- tx2->DrawLatex(110,35,"CMS");
- tx3->DrawLatex(102,32,"Preliminary");
+ tx2->DrawLatex(0.79,0.85,"CMS");
+ tx3->DrawLatex(0.70,0.80,"Preliminary");
 
  //dielectron pt
  TCanvas *cpe = new TCanvas();
