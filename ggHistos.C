@@ -41,7 +41,16 @@ bool goodElectron(int i) {
  else return false;
 }
 
-void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.root") {
+bool goodJet(int i) {
+  if(	neutralSum[i]/jtpt[i] < 0.9
+	&& chargedHardSum[i]/jtpt[i] > 0.0
+	&& chargedN[i]+photonN[i]+neutralN[i]+eN[i]+muN[i] > 0
+	&& (chargedSum[i]-chargedHardSum[i])/jtpt[i] < 0.99
+	) return true;
+  else return false;
+}
+
+void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.root", bool pp=1) {
 
  TH1::SetDefaultSumw2();
 
@@ -51,6 +60,7 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.r
 
  int njet;
  float jetpt[20], jeteta[20], jetphi[20]; 
+ int jetID[20];
 
  TTree *ztree = new TTree("ztree","Z boson candidate events");
  ztree->Branch("run",	&run,	"run/I");
@@ -67,6 +77,7 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.r
  ztree->Branch("jetpt",	&jetpt,	"jetpt[njet]/F");
  ztree->Branch("jeteta",	&jeteta,	"jeteta[njet]/F");
  ztree->Branch("jetphi",	&jetphi,	"jetphi[njet]/F");
+ ztree->Branch("jetID",	&jetID,	"jetID[njet]/I");
 
  const int nPtBins = 13;
  const double PtBins[nPtBins+1]={0,2.5,5.0,7.5,10.0,12.5,15.0,20,30,40,50,70,100,150};
@@ -100,8 +111,9 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.r
  }
  initggTree(inggTree);
 
- //TTree *injetTree = (TTree*)fin.Get("ak4PFJetAnalyzer/t"); //pp
- TTree *injetTree = (TTree*)fin.Get("akPu4CaloJetAnalyzer/t");  //PbPb
+ TTree *injetTree;
+ if(pp) injetTree = (TTree*)fin.Get("ak4PFJetAnalyzer/t");
+ else injetTree = (TTree*)fin.Get("akPu4PFJetAnalyzer/t");
  if(!injetTree){
     cout<<"Could not access tree!"<<endl;
     return;
@@ -204,8 +216,8 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.r
 
    for(int ij=0; ij<nref; ij++) {
 
-     float dR1 = sqrt( (muon1.Eta()-jteta[ij])*(muon1.Eta()-jteta[ij]) + (muon1.Phi()-jtphi[ij])*(muon1.Phi()-jtphi[ij]) );
-     float dR2 = sqrt( (muon2.Eta()-jteta[ij])*(muon2.Eta()-jteta[ij]) + (muon2.Phi()-jtphi[ij])*(muon2.Phi()-jtphi[ij]) );
+     float dR1 = sqrt( (muon1.Eta()-jteta[ij])*(muon1.Eta()-jteta[ij]) + getDphi(muon1.Phi(),jtphi[ij])*getDphi(muon1.Phi(),jtphi[ij]) );
+     float dR2 = sqrt( (muon2.Eta()-jteta[ij])*(muon2.Eta()-jteta[ij]) + getDphi(muon2.Phi(),jtphi[ij])*getDphi(muon2.Phi(),jtphi[ij]) );
      if(flagMu && (dR1 < 0.1 || dR2 < 0.1)) continue;
 
      if(jtpt[ij]>30) {
@@ -213,6 +225,7 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.r
 	jetpt[njet] = jtpt[ij];
 	jeteta[njet] = jteta[ij];
 	jetphi[njet] = jtphi[ij];
+        jetID[njet] = goodJet(ij);
 	njet++;
 
      }

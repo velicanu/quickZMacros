@@ -29,7 +29,7 @@ void ggPlots() {
  tx3->SetTextSize(0.04);
  tx3->SetNDC(kTRUE);
 
- TFile *fin = TFile::Open("Zevents_pp_ZMM_29Nov.root");
+ TFile *fin = TFile::Open("Zevents_PbPb_Express_262548-262837.root");
 
  //dimuon mass
  TCanvas *cmm = new TCanvas();
@@ -53,7 +53,7 @@ void ggPlots() {
  tx->DrawLatex(0.17,0.80,"p_{T}^{#mu} > 10 GeV");
  tx->DrawLatex(0.17,0.74,"|#eta^{#mu}| < 2.4");
 
- tx->DrawLatex(0.13,0.94,"Prompt Skim 13 pb^{-1} (pp 5 TeV)");
+ tx->DrawLatex(0.13,0.94,"Express 262548-262837 (PbPb 5 TeV)");
 
  tx2->DrawLatex(0.79,0.85,"CMS");
  tx3->DrawLatex(0.70,0.80,"Preliminary");

@@ -24,6 +24,16 @@ const double pi = 3.14159265358979323846;
 
 using namespace std;
 
+float getDphi(float phi1, float phi2) {
+  float dphi = phi1 - phi2;
+  if ( dphi > pi )
+    dphi = dphi - 2.*pi;
+  if ( dphi <= -pi ) 
+    dphi = dphi + 2.*pi;
+  return dphi;
+}
+
+//variables branches in ggNtuple
    Int_t           run;
    Long64_t        event;
    Int_t           lumis;
