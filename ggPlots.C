@@ -29,7 +29,7 @@ void ggPlots() {
  tx3->SetTextSize(0.04);
  tx3->SetNDC(kTRUE);
 
- TFile *fin = TFile::Open("Zevents_PbPb_Express_262548-262837.root");
+ TFile *fin = TFile::Open("Zevents_pp_ZMM_5Dec.root");
 
  //dimuon mass
  TCanvas *cmm = new TCanvas();
@@ -50,10 +50,10 @@ void ggPlots() {
  lm->Draw();
 
  tx->DrawLatex(0.17,0.86,"Tight muons");
- tx->DrawLatex(0.17,0.80,"p_{T}^{#mu} > 10 GeV");
+ tx->DrawLatex(0.17,0.80,"p_{T}^{#mu} > 20 GeV");
  tx->DrawLatex(0.17,0.74,"|#eta^{#mu}| < 2.4");
 
- tx->DrawLatex(0.13,0.94,"Express 262548-262837 (PbPb 5 TeV)");
+ tx->DrawLatex(0.13,0.94,"Express 262548-263261 (PbPb 5 TeV)");
 
  tx2->DrawLatex(0.79,0.85,"CMS");
  tx3->DrawLatex(0.70,0.80,"Preliminary");
@@ -92,7 +92,7 @@ void ggPlots() {
  le->Draw();
 
  tx->DrawLatex(0.17,0.86,"Medium electrons");
- tx->DrawLatex(0.17,0.80,"p_{T}^{e} > 10 GeV");
+ tx->DrawLatex(0.17,0.80,"p_{T}^{e} > 20 GeV");
  tx->DrawLatex(0.17,0.74,"|#eta^{e}| < 2.5");
 
  tx->DrawLatex(0.13,0.94,"Express 262163 - 262274 (pp 5 TeV)");
