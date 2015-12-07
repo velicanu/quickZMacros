@@ -1,6 +1,29 @@
 #include "ggTree.h"
 
-void ggZjetPlots(bool pp = 1, float ptcutZ = 40, bool plotnear = 0) {
+int hiBin;
+int Zcharge, Ztype; //type 1 muon, type 2 electron
+float Zmass, Zpt, Zeta, Zrapidity, Zphi;
+int njet;
+float jetpt[20], jeteta[20], jetphi[20]; 
+int jetID[20];
+
+void initZtree(TTree *ztree) {
+ ztree->SetBranchAddress("hiBin",	&hiBin);
+ ztree->SetBranchAddress("Ztype",	&Ztype);
+ ztree->SetBranchAddress("Zmass",	&Zmass);
+ ztree->SetBranchAddress("Zpt",		&Zpt);
+ ztree->SetBranchAddress("Zeta",	&Zeta);
+ ztree->SetBranchAddress("Zphi",	&Zphi);
+ ztree->SetBranchAddress("Zrapidity",	&Zrapidity);
+ ztree->SetBranchAddress("Zcharge",	&Zcharge);
+ ztree->SetBranchAddress("njet",	&njet);
+ ztree->SetBranchAddress("jetpt",	jetpt);
+ ztree->SetBranchAddress("jeteta",	jeteta);
+ ztree->SetBranchAddress("jetphi",	jetphi);
+ ztree->SetBranchAddress("jetID",	jetID);
+}
+
+void ggZjetPlots(bool pp = 1, bool mu = 1, float ptcutZ = 40, bool plotnear = 0) {
 
  gStyle->SetOptStat(0);
  TH1::SetDefaultSumw2();
@@ -21,29 +44,24 @@ void ggZjetPlots(bool pp = 1, float ptcutZ = 40, bool plotnear = 0) {
  tx3->SetNDC(kTRUE);
 
  TFile *fin;
- if(pp) fin = TFile::Open("Zevents_pp_ZMM_2Dec_withJetID.root");
- else   fin = TFile::Open("Zevents_PbPb_Express_262548-262837.root");
+ if(pp && mu) fin = TFile::Open("Zevents_pp_ZMM_5Dec.root");
+ else if(!pp & mu)   fin = TFile::Open("Zevents_PbPb_Express_262548-263261_5Dec.root");
+ else if(pp && !mu) fin = TFile::Open("Zevents_pp_Zee_3Dec.root");
+ else cout << "???" << endl;
+ TFile *fMC = TFile::Open("Zevents_pp_ZmumuJet_MC_5Dec.root");
 
- int Zcharge, Ztype; //type 1 muon, type 2 electron
- float Zmass, Zpt, Zeta, Zrapidity, Zphi;
- int njet;
- float jetpt[20], jeteta[20], jetphi[20]; 
- int jetID[20];
+ int nData = 0; int nMC = 0;
 
  TTree *ztree = (TTree*)fin->Get("ztree");
- ztree->SetBranchAddress("Ztype",	&Ztype);
- ztree->SetBranchAddress("Zmass",	&Zmass);
- ztree->SetBranchAddress("Zpt",		&Zpt);
- ztree->SetBranchAddress("Zeta",	&Zeta);
- ztree->SetBranchAddress("Zphi",	&Zphi);
- ztree->SetBranchAddress("Zrapidity",	&Zrapidity);
- ztree->SetBranchAddress("Zcharge",	&Zcharge);
- ztree->SetBranchAddress("njet",	&njet);
- ztree->SetBranchAddress("jetpt",	jetpt);
- ztree->SetBranchAddress("jeteta",	jeteta);
- ztree->SetBranchAddress("jetphi",	jetphi);
- ztree->SetBranchAddress("jetID",	jetID);
+ initZtree(ztree);
 
+ /*const int nCentBins = 6;
+ const float centBins[nCentBins+1] = {0,20,40,60,80,100,200};
+ TH1F *hZcent = new TH1F("hZcent",";centrality bin;Counts",nCentBins,centBins);*/
+
+ TH1F *hZmass = new TH1F("hZmass",";M^{#mu#mu} (GeV);Counts",30,60,120);
+ TH1F *hZpt = new TH1F("hZpt",";p_{T}^{#mu#mu} (GeV);Counts",30,30,180);
+ TH1F *hZy = new TH1F("hZy",";y^{#mu#mu};Counts",25,-2.5,2.5);
  TH1F *dPhiZjet = new TH1F("dPhiZjet",";#Delta#phi_{Zjet};Counts",30,0,pi);
  TH1F *dEtaZjet = new TH1F("dEtaZjet",";|#Delta#eta_{Zjet}|;Counts",25,0,5);
  TH2F *dPhidEta = new TH2F("dPhidEta",";|#Delta#eta_{Zjet}|;#Delta#phi_{Zjet}",25,0,5,30,0,pi);
@@ -53,12 +71,20 @@ void ggZjetPlots(bool pp = 1, float ptcutZ = 40, bool plotnear = 0) {
  for(int j=0; j<ztree->GetEntries(); j++) {
 
    ztree->GetEntry(j);
-   if(Zcharge != 0 || Ztype != 1 || Zpt < ptcutZ || Zmass < 80 || Zmass > 110) continue;
+   if(Zcharge != 0 || Ztype != 1) continue;
+   //hZcent->Fill(hiBin);
+
+   if(Zpt < ptcutZ || Zmass < 80 || Zmass > 110) continue;
+
+   hZmass->Fill(Zmass);
+   hZpt->Fill(Zpt);
+   hZy->Fill(Zrapidity);
+   nData++;
 
    for(int ij=0; ij<njet; ij++) {
 
      if(fabs(jeteta[ij])>2.0) continue;
-     if(jetID[ij] != 1) continue;
+     if(pp && jetID[ij] != 1) continue;
      float dphi = getDphi(Zphi,jetphi[ij]);
      dPhiZjet->Fill(fabs(dphi));
      float deta = Zeta - jeteta[ij];
@@ -72,44 +98,161 @@ void ggZjetPlots(bool pp = 1, float ptcutZ = 40, bool plotnear = 0) {
 
  }
 
+ TTree *ztreeMC = (TTree*)fMC->Get("ztree");
+ initZtree(ztreeMC);
+
+ TH1F *hZmassMC = new TH1F("hZmassMC",";M^{#mu#mu} (GeV);Counts",30,60,120);
+ TH1F *hZptMC = new TH1F("hZptMC",";p_{T}^{#mu#mu} (GeV);Counts",30,30,180);
+ TH1F *hZyMC = new TH1F("hZyMC",";y^{#mu#mu};Counts",18,-2.4,2.4);
+ TH1F *dPhiZjetMC = new TH1F("dPhiZjetMC",";#Delta#phi_{Zjet};Counts",30,0,pi);
+ TH1F *dEtaZjetMC = new TH1F("dEtaZjetMC",";|#Delta#eta_{Zjet}|;Counts",25,0,5);
+ TH2F *dPhidEtaMC = new TH2F("dPhidEtaMC",";|#Delta#eta_{Zjet}|;#Delta#phi_{Zjet}",25,0,5,30,0,pi);
+ TH1F *xZjetMC = new TH1F("xZjetMC",";p_{T}^{jet} / p_{T}^{Z};Counts",10,0,2);
+ TH1F *xZjetNearMC = new TH1F("xZjetNearMC",";p_{T}^{jet} / p_{T}^{Z};Counts",10,0,2);
+
+ hZmassMC->SetLineColor(kRed);
+ hZptMC->SetLineColor(kRed);
+ hZyMC->SetLineColor(kRed);
+ dPhiZjetMC->SetLineColor(kRed);
+ dEtaZjetMC->SetLineColor(kRed);
+ xZjetMC->SetLineColor(kRed);
+ xZjetNearMC->SetLineColor(kCyan);
+
+ for(int j=0; j<ztreeMC->GetEntries(); j++) {
+
+   ztreeMC->GetEntry(j);
+   if(Zcharge != 0 || Ztype != 1) continue;
+   //hZcent->Fill(hiBin);
+
+   if(Zpt < ptcutZ || Zmass < 80 || Zmass > 110) continue;
+
+   hZmassMC->Fill(Zmass);
+   hZptMC->Fill(Zpt);
+   hZyMC->Fill(Zrapidity);
+   nMC++;
+
+   for(int ij=0; ij<njet; ij++) {
+
+     if(fabs(jeteta[ij])>2.0) continue;
+     if(jetID[ij] != 1) continue;
+     float dphi = getDphi(Zphi,jetphi[ij]);
+     dPhiZjetMC->Fill(fabs(dphi));
+     float deta = Zeta - jeteta[ij];
+     dEtaZjetMC->Fill(fabs(deta));
+     dPhidEtaMC->Fill(fabs(deta),fabs(dphi));
+     float xj = jetpt[ij]/Zpt;
+     if(dphi>2*pi/3) xZjetMC->Fill(xj);
+     else xZjetNearMC->Fill(xj);
+
+   }
+
+ }
+
+ hZmassMC->Scale(double(nData)/double(nMC));
+ hZptMC->Scale(double(nData)/double(nMC));
+ hZyMC->Scale(double(nData)/double(nMC));
+ dPhiZjetMC->Scale(double(nData)/double(nMC));
+ dEtaZjetMC->Scale(double(nData)/double(nMC));
+ xZjetMC->Scale(double(nData)/double(nMC));
+ xZjetNearMC->Scale(double(nData)/double(nMC));
+
+ /*hZcent->SetMarkerColor(kRed);
+ hZcent->SetLineColor(kRed);
+ hZcent->Draw();
+ TCanvas *c0 = new TCanvas();
+ float Npart[nCentBins] = {358.8,264.3,189.2,131.4,86.94,21.85};
+ float Ncoll[nCentBins] = {1626.0,1005.0,606.4,348.2,186.2,30.74};
+ float x[nCentBins], xerr[nCentBins], y[nCentBins], yerr[nCentBins];
+ for(int i=0; i<nCentBins; i++) {
+   x[i] = Npart[nCentBins-1-i];
+   xerr[i] = 0;
+   float binwidth = centBins[nCentBins-i]-centBins[nCentBins-1-i];
+   y[i] = hZcent->GetBinContent(nCentBins-i)/Ncoll[nCentBins-1-i]/binwidth;
+   yerr[i] = hZcent->GetBinError(nCentBins-i)/Ncoll[nCentBins-1-i]/binwidth;
+ }
+ TGraphErrors *g = new TGraphErrors(nCentBins,x,y,xerr,yerr);
+ g->SetMarkerColor(kRed);
+ g->SetLineColor(kRed);
+ g->GetXaxis()->SetTitle("N_{part}");
+ g->GetYaxis()->SetTitle("dN^{Z} / N_{coll}");
+ g->Draw("aep");
+ tx->DrawLatex(0.60,0.86,"p_{T}^{#mu} > 20 GeV");
+ tx->DrawLatex(0.60,0.80,"|#eta^{#mu}| < 2.4");
+ tx->DrawLatex(0.60,0.74,"60 < m^{#mu#mu} < 120 GeV");
+ tx->DrawLatex(0.13,0.94,"Express 262548-263261 (PbPb 5 TeV)");*/
+
  TCanvas *c1 = new TCanvas();
- dPhiZjet->Draw();
+ hZmassMC->Draw("hist");
+ hZmass->Draw("ep same");
+ if(pp) tx->DrawLatex(0.13,0.94,"Prompt Skim 13 pb^{-1} (pp 5 TeV)");
+ else   tx->DrawLatex(0.13,0.94,"Express 262548 - 262837 (PbPb 5 TeV)");
+ tx->DrawLatex(0.63,0.86,"80 < m^{Z} < 110 GeV");
+ tx->DrawLatex(0.63,0.80,Form("p_{T}^{Z} > %g GeV",ptcutZ));
+
+ TCanvas *c2 = new TCanvas();
+ hZptMC->Draw("hist");
+ hZpt->Draw("ep same");
+ if(pp) tx->DrawLatex(0.13,0.94,"Prompt Skim 13 pb^{-1} (pp 5 TeV)");
+ else   tx->DrawLatex(0.13,0.94,"Express 262548 - 262837 (PbPb 5 TeV)");
+ tx->DrawLatex(0.63,0.86,"80 < m^{Z} < 110 GeV");
+ tx->DrawLatex(0.63,0.80,Form("p_{T}^{Z} > %g GeV",ptcutZ));
+
+ TCanvas *c3 = new TCanvas();
+ hZyMC->Draw("hist");
+ hZy->Draw("ep same");
+ if(pp) tx->DrawLatex(0.13,0.94,"Prompt Skim 13 pb^{-1} (pp 5 TeV)");
+ else   tx->DrawLatex(0.13,0.94,"Express 262548 - 262837 (PbPb 5 TeV)");
+ tx->DrawLatex(0.63,0.86,"80 < m^{Z} < 110 GeV");
+ tx->DrawLatex(0.63,0.80,Form("p_{T}^{Z} > %g GeV",ptcutZ));
+
+ TCanvas *c4 = new TCanvas();
+ dPhiZjetMC->Draw("hist");
+ dPhiZjet->Draw("ep same");
  if(pp) tx->DrawLatex(0.13,0.94,"Prompt Skim 13 pb^{-1} (pp 5 TeV)");
  else   tx->DrawLatex(0.13,0.94,"Express 262548 - 262837 (PbPb 5 TeV)");
  tx->DrawLatex(0.17,0.86,"80 < m^{Z} < 110 GeV");
  tx->DrawLatex(0.17,0.80,Form("p_{T}^{Z} > %g GeV",ptcutZ));
  if(pp) tx->DrawLatex(0.17,0.74,"ak4PF jets");
- else   tx->DrawLatex(0.17,0.74,"akPu4Calo jets, muons rejected by dR>0.1");
+ else   tx->DrawLatex(0.17,0.74,"akPu4Calo jets");
  tx->DrawLatex(0.17,0.68,"p_{T}^{jet} > 30 GeV");
  tx->DrawLatex(0.17,0.62,"|#eta^{jet}| < 2.0");
- tx->DrawLatex(0.17,0.56,"jet ID 13 TeV");
+ tx->DrawLatex(0.17,0.56,"jet ID");
 
- TCanvas *c2 = new TCanvas();
- dEtaZjet->Draw();
+ TCanvas *c5 = new TCanvas();
+ dEtaZjetMC->Draw("hist");
+ dEtaZjet->Draw("ep same");
  if(pp) tx->DrawLatex(0.13,0.94,"Prompt Skim 13 pb^{-1} (pp 5 TeV)");
  else   tx->DrawLatex(0.13,0.94,"Express 262548 - 262837 (PbPb 5 TeV)");
  tx->DrawLatex(0.63,0.86,"80 < m^{Z} < 110 GeV");
  tx->DrawLatex(0.63,0.80,Form("p_{T}^{Z} > %g GeV",ptcutZ));
  if(pp) tx->DrawLatex(0.63,0.74,"ak4PF jets");
- else   tx->DrawLatex(0.63,0.74,"akPu4Calo jets, muons rejected by dR>0.1");
+ else   tx->DrawLatex(0.63,0.74,"akPu4Calo jets");
  tx->DrawLatex(0.63,0.68,"p_{T}^{jet} > 30 GeV");
  tx->DrawLatex(0.63,0.62,"|#eta^{jet}| < 2.0");
 
- TCanvas *c3 = new TCanvas();
+ TCanvas *c6 = new TCanvas();
  dPhidEta->Draw("colz");
 
+ TCanvas *c7 = new TCanvas();
+ dPhidEtaMC->Draw("colz");
+
  TArrow *arrow = new TArrow();
- arrow->SetLineColor(kRed);
- arrow->SetFillColor(kRed);
+ arrow->SetLineColor(kBlack);
+ arrow->SetFillColor(kBlack);
  arrow->SetLineWidth(2);
  arrow->SetArrowSize(0.03);
+
+ TArrow *arrowMC = (TArrow*)arrow->Clone();
+ arrowMC->SetLineColor(kRed);
+ arrowMC->SetFillColor(kRed);
 
  TArrow *arrow2 = (TArrow*)arrow->Clone();
  arrow2->SetLineColor(kBlue);
  arrow2->SetFillColor(kBlue);
 
- TCanvas *c4 = new TCanvas();
- xZjet->Draw();
+ TCanvas *c8 = new TCanvas();
+ xZjetMC->Draw("hist");
+ xZjet->Draw("ep same");
  xZjetNear->SetMarkerColor(kBlue);
  xZjetNear->SetLineColor(kBlue);
  xZjetNear->SetMarkerStyle(24);
@@ -123,6 +266,7 @@ void ggZjetPlots(bool pp = 1, float ptcutZ = 40, bool plotnear = 0) {
  tx->DrawLatex(0.63,0.68,"p_{T}^{jet} > 30 GeV");
  tx->DrawLatex(0.63,0.62,"#Delta#phi_{Zjet} > 2#pi/3");
  arrow->DrawArrow(xZjet->GetMean(),xZjet->GetMaximum()*0.2,xZjet->GetMean(),0);
+ arrowMC->DrawArrow(xZjetMC->GetMean(),xZjetMC->GetMaximum()*0.2,xZjetMC->GetMean(),0);
  if(plotnear) arrow2->DrawArrow(xZjetNear->GetMean(),xZjet->GetMaximum()*0.2,xZjetNear->GetMean(),0);
 
 }
