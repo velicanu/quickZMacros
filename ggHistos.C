@@ -42,17 +42,23 @@ bool goodElectron(int i) {
 }
 
 bool goodJet(int i) {
-  if(	neutralSum[i]/jtpt[i] < 0.9
-	&& chargedHardSum[i]/jtpt[i] > 0.0
+  if(	neutralSum[i]/rawpt[i] < 0.9
+	&& chargedSum[i]/rawpt[i] > 0.01
 	&& chargedN[i]+photonN[i]+neutralN[i]+eN[i]+muN[i] > 0
-	&& (chargedSum[i]-chargedHardSum[i])/jtpt[i] < 0.99
+	&& chargedMax[i]/rawpt[i] < 0.99
+	&& photonSum[i]/rawpt[i] < 0.99
+	&& eSum[i]/rawpt[i] < 0.99
 	) return true;
   else return false;
 }
 
 void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.root", bool pp=1) {
 
+ float leptonptcut = 20;
+
  TH1::SetDefaultSumw2();
+
+ int hiBin;
 
  int Ztype; //type 1 muon, type 2 electron
  float Zmass, Zpt, Zeta, Zrapidity, Zphi;
@@ -66,6 +72,7 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.r
  ztree->Branch("run",	&run,	"run/I");
  ztree->Branch("event",	&event,	"event/I");
  ztree->Branch("lumis",	&lumis,	"lumis/I");
+ ztree->Branch("hiBin", &hiBin, "hiBin/I");
  ztree->Branch("Ztype",	&Ztype,	"Ztype/I");
  ztree->Branch("Zmass",	&Zmass,	"Zmass/F");
  ztree->Branch("Zpt",	&Zpt,	"Zpt/F");
@@ -113,12 +120,19 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.r
 
  TTree *injetTree;
  if(pp) injetTree = (TTree*)fin.Get("ak4PFJetAnalyzer/t");
- else injetTree = (TTree*)fin.Get("akPu4PFJetAnalyzer/t");
+ else injetTree = (TTree*)fin.Get("akPu4CaloJetAnalyzer/t");
  if(!injetTree){
     cout<<"Could not access tree!"<<endl;
     return;
  }
  initjetTree(injetTree);
+
+ /*TTree *inevtTree = (TTree*)fin.Get("hiEvtAnalyzer/HiTree");
+ if(!inevtTree){
+    cout<<"Could not access tree!"<<endl;
+    return;
+ }
+ inevtTree->SetBranchAddress("hiBin", &hiBin);*/
 
  int nEv = inggTree->GetEntries();
 
@@ -126,6 +140,7 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.r
 
    inggTree->GetEntry(j);
    injetTree->GetEntry(j);
+   //inevtTree->GetEntry(j);
    if(j%20000 == 0) cout << "Processing event: " << j << endl;
    bool flagMu = 0; bool flagEle = 0;
    njet = 0;
@@ -135,11 +150,11 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.r
 
    for(int i1 = 0; i1 < nMu; i1++) {
 
-    if(muPt->at(i1)>10 && fabs(muEta->at(i1))<2.4 && goodMuon(i1)) {
+    if(muPt->at(i1)>leptonptcut && fabs(muEta->at(i1))<2.4 && goodMuon(i1)) {
 
-       for(int i2 = i1; i2 < nMu; i2++) {
+       for(int i2 = i1+1; i2 < nMu; i2++) {
 
-          if(muPt->at(i2)>10 && fabs(muEta->at(i2))<2.4 && goodMuon(i2)) {
+          if(muPt->at(i2)>leptonptcut && fabs(muEta->at(i2))<2.4 && goodMuon(i2)) {
 
 	    muon1.SetPtEtaPhiM(muPt->at(i1), muEta->at(i1), muPhi->at(i1), 0.105658);
 	    muon2.SetPtEtaPhiM(muPt->at(i2), muEta->at(i2), muPhi->at(i2), 0.105658);
@@ -175,11 +190,11 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.r
 
    for(int i1 = 0; i1 < nEle; i1++) {
 
-    if(elePt->at(i1)>10 && fabs(eleSCEta->at(i1))<2.5 && goodElectron(i1) && (fabs(eleSCEta->at(i1))<1.4442 || fabs(eleSCEta->at(i1))>1.566)) {
+    if(elePt->at(i1)>leptonptcut && fabs(eleSCEta->at(i1))<2.5 && goodElectron(i1) && (fabs(eleSCEta->at(i1))<1.4442 || fabs(eleSCEta->at(i1))>1.566)) {
 
-       for(int i2 = i1; i2 < nEle; i2++) {
+       for(int i2 = i1+1; i2 < nEle; i2++) {
 
-          if(elePt->at(i2)>10 && fabs(eleSCEta->at(i2))<2.5 && goodElectron(i2) && (fabs(eleSCEta->at(i2))<1.4442 || fabs(eleSCEta->at(i2))>1.566)) {
+          if(elePt->at(i2)>leptonptcut && fabs(eleSCEta->at(i2))<2.5 && goodElectron(i2) && (fabs(eleSCEta->at(i2))<1.4442 || fabs(eleSCEta->at(i2))>1.566)) {
 
 	    ele1.SetPtEtaPhiM(elePt->at(i1), eleEta->at(i1), elePhi->at(i1), 0.000511);
 	    ele2.SetPtEtaPhiM(elePt->at(i2), eleEta->at(i2), elePhi->at(i2), 0.000511);
@@ -202,7 +217,6 @@ void ggHistos(TString infilename="HiForest.root", TString outfilename="Zevents.r
 		eeY->Fill(pair.Rapidity());
 		eePhi->Fill(pair.Phi());
 	        nElPair++;
-		if(pair.Pt() > 150) cout << "run " << run << " lumi " << lumis << " event " << event << endl;
 	     }
 	     else {
 		eeMassSS->Fill(pair.M());
