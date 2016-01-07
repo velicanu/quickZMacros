@@ -64,11 +64,13 @@ void ggTrack(TString infilename="HiForest.root", TString outfilename="Zevents.ro
   int Ztype; //type 1 muon, type 2 electron
   float Zmass, Zpt, Zeta, Zrapidity, Zphi;
   float Zlepton1Pt, Zlepton2Pt, Zlepton1Eta, Zlepton2Eta, Zlepton1Phi, Zlepton2Phi;
+  float weight = 0;
   int Zcharge;
 
+
   int njet;
-  float jetpt[20], jeteta[20], jetphi[20]; 
-  int jetID[20];
+  float jetpt[200], jeteta[200], jetphi[200]; 
+  int jetID[200];
   
   Int_t           nTrk;
   Float_t         trkPt[100000];   //[nTrk]
@@ -146,6 +148,7 @@ void ggTrack(TString infilename="HiForest.root", TString outfilename="Zevents.ro
   ztree->Branch("pfCandPt", &pfCandPt,"pfCandPt[nTrk]/F");
   ztree->Branch("pfEcal", &pfEcal,"pfEcal[nTrk]/F");
   ztree->Branch("pfHcal", &pfHcal,"pfHcal[nTrk]/F");
+  ztree->Branch("weight", &weight,"weight/F");
 
 
 
@@ -183,11 +186,20 @@ void ggTrack(TString infilename="HiForest.root", TString outfilename="Zevents.ro
 
   TTree *injetTree = (TTree*)fin.Get("ak4PFJetAnalyzer/t");
   if(!injetTree) injetTree = (TTree*)fin.Get("akPu4PFJetAnalyzer/t");
+  // TTree *injetTree = (TTree*)fin.Get("ak3PFJetAnalyzer/t");
+  // if(!injetTree) injetTree = (TTree*)fin.Get("akPu3PFJetAnalyzer/t");
   if(!injetTree){
     cout<<"Could not access jet tree!"<<endl;
     return;
   }
   initjetTree(injetTree);
+  
+  TTree *evttree = (TTree*)fin.Get("hiEvtAnalyzer/HiTree");
+  if(!evttree){
+    cout<<"Could not access event tree!"<<endl;
+    return;
+  }
+  evttree->SetBranchAddress("weight", &weight);
   
   TTree * tracktree_                     = (TTree*) fin.Get("anaTrack/trackTree");
   if( tracktree_ == 0 ) tracktree_        = (TTree*) fin.Get("ppTrack/trackTree");
@@ -213,6 +225,7 @@ void ggTrack(TString infilename="HiForest.root", TString outfilename="Zevents.ro
     inggTree->GetEntry(j);
     injetTree->GetEntry(j);
     tracktree_->GetEntry(j);
+    evttree->GetEntry(j);
     //inevtTree->GetEntry(j);
     if(j%20000 == 0) cout << "Processing event: " << j << endl;
     bool flagMu = 0; bool flagEle = 0;

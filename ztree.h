@@ -28,6 +28,7 @@ public :
    Int_t           hiBin;
    Int_t           Ztype;
    Float_t         Zmass;
+   Float_t         weight;
    Float_t         Zpt;
    Float_t         Zeta;
    Float_t         Zphi;
@@ -45,31 +46,31 @@ public :
    Float_t         jetphi[11];   //[njet]
    Int_t           jetID[11];   //[njet]
    Int_t           nTrk;
-   Float_t         trkPt[2145];   //[nTrk]
-   Float_t         trkPtError[2145];   //[nTrk]
-   UChar_t         trkNHit[2145];   //[nTrk]
-   UChar_t         trkNlayer[2145];   //[nTrk]
-   Float_t         trkEta[2145];   //[nTrk]
-   Float_t         trkPhi[2145];   //[nTrk]
-   Int_t           trkCharge[2145];   //[nTrk]
-   UChar_t         trkNVtx[2145];   //[nTrk]
-   Bool_t          highPurity[2145];   //[nTrk]
-   Bool_t          tight[2145];   //[nTrk]
-   Bool_t          loose[2145];   //[nTrk]
-   Float_t         trkChi2[2145];   //[nTrk]
-   UChar_t         trkNdof[2145];   //[nTrk]
-   Float_t         trkDxy1[2145];   //[nTrk]
-   Float_t         trkDxyError1[2145];   //[nTrk]
-   Float_t         trkDz1[2145];   //[nTrk]
-   Float_t         trkDzError1[2145];   //[nTrk]
-   Bool_t          trkFake[2145];   //[nTrk]
-   UChar_t         trkAlgo[2145];   //[nTrk]
-   UChar_t         trkOriginalAlgo[2145];   //[nTrk]
-   Float_t         trkMVA[2145];   //[nTrk]
-   Int_t           pfType[2145];   //[nTrk]
-   Float_t         pfCandPt[2145];   //[nTrk]
-   Float_t         pfEcal[2145];   //[nTrk]
-   Float_t         pfHcal[2145];   //[nTrk]
+   Float_t         trkPt[5000];   //[nTrk]
+   Float_t         trkPtError[5000];   //[nTrk]
+   UChar_t         trkNHit[5000];   //[nTrk]
+   UChar_t         trkNlayer[5000];   //[nTrk]
+   Float_t         trkEta[5000];   //[nTrk]
+   Float_t         trkPhi[5000];   //[nTrk]
+   Int_t           trkCharge[5000];   //[nTrk]
+   UChar_t         trkNVtx[5000];   //[nTrk]
+   Bool_t          highPurity[5000];   //[nTrk]
+   Bool_t          tight[5000];   //[nTrk]
+   Bool_t          loose[5000];   //[nTrk]
+   Float_t         trkChi2[5000];   //[nTrk]
+   UChar_t         trkNdof[5000];   //[nTrk]
+   Float_t         trkDxy1[5000];   //[nTrk]
+   Float_t         trkDxyError1[5000];   //[nTrk]
+   Float_t         trkDz1[5000];   //[nTrk]
+   Float_t         trkDzError1[5000];   //[nTrk]
+   Bool_t          trkFake[5000];   //[nTrk]
+   UChar_t         trkAlgo[5000];   //[nTrk]
+   UChar_t         trkOriginalAlgo[5000];   //[nTrk]
+   Float_t         trkMVA[5000];   //[nTrk]
+   Int_t           pfType[5000];   //[nTrk]
+   Float_t         pfCandPt[5000];   //[nTrk]
+   Float_t         pfEcal[5000];   //[nTrk]
+   Float_t         pfHcal[5000];   //[nTrk]
 
    // List of branches
    TBranch        *b_run;   //!
@@ -78,6 +79,7 @@ public :
    TBranch        *b_hiBin;   //!
    TBranch        *b_Ztype;   //!
    TBranch        *b_Zmass;   //!
+   TBranch        *b_weight;   //!
    TBranch        *b_Zpt;   //!
    TBranch        *b_Zeta;   //!
    TBranch        *b_Zphi;   //!
@@ -121,13 +123,13 @@ public :
    TBranch        *b_pfEcal;   //!
    TBranch        *b_pfHcal;   //!
 
-   ztree(TTree *tree=0);
+   ztree(std::string thisfilename);
    virtual ~ztree();
    virtual Int_t    Cut(Long64_t entry);
    virtual Int_t    GetEntry(Long64_t entry);
    virtual Long64_t LoadTree(Long64_t entry);
    virtual void     Init(TTree *tree);
-   virtual void     Loop();
+   virtual void     Loop(std::string outfname, std::string tag="");
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
 };
@@ -135,19 +137,13 @@ public :
 #endif
 
 #ifdef ztree_cxx
-ztree::ztree(TTree *tree) : fChain(0) 
+ztree::ztree(std::string thisfilename) : fChain(0) 
 {
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
-   if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("test.root");
-      if (!f || !f->IsOpen()) {
-         f = new TFile("test.root");
-      }
-      f->GetObject("ztree",tree);
-
-   }
-   Init(tree);
+  TFile *f = TFile::Open(thisfilename.data());
+  TTree * tree = (TTree*) f->Get("ztree");
+  Init(tree);
 }
 
 ztree::~ztree()
@@ -197,6 +193,7 @@ void ztree::Init(TTree *tree)
    fChain->SetBranchAddress("hiBin", &hiBin, &b_hiBin);
    fChain->SetBranchAddress("Ztype", &Ztype, &b_Ztype);
    fChain->SetBranchAddress("Zmass", &Zmass, &b_Zmass);
+   fChain->SetBranchAddress("weight", &weight, &b_weight);
    fChain->SetBranchAddress("Zpt", &Zpt, &b_Zpt);
    fChain->SetBranchAddress("Zeta", &Zeta, &b_Zeta);
    fChain->SetBranchAddress("Zphi", &Zphi, &b_Zphi);
