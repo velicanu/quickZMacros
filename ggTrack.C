@@ -200,6 +200,7 @@ void ggTrack(TString infilename="HiForest.root", TString outfilename="Zevents.ro
     return;
   }
   evttree->SetBranchAddress("weight", &weight);
+  evttree->SetBranchAddress("hiBin", &hiBin);
   
   TTree * tracktree_                     = (TTree*) fin.Get("anaTrack/trackTree");
   if( tracktree_ == 0 ) tracktree_        = (TTree*) fin.Get("ppTrack/trackTree");
@@ -215,7 +216,6 @@ void ggTrack(TString infilename="HiForest.root", TString outfilename="Zevents.ro
       cout<<"Could not access tree!"<<endl;
       return;
   }
-  inevtTree->SetBranchAddress("hiBin", &hiBin);
   */
 
   int nEv = inggTree->GetEntries();

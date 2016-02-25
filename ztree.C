@@ -8,6 +8,10 @@
 
 void ztree::Loop(std::string outfname , std::string tag)
 {
+  TFile * fcentweight = new TFile("/export/d00/scratch/dav2105/ztrees/centweight.root");
+  TH1D * h_zmm_data_hibin = (TH1D*) fcentweight->Get("h_zmm_data_hibin");
+  TH1D * h_zmm_mcjet_hibin = (TH1D*) fcentweight->Get("h_zmm_mcjet_hibin");
+  h_zmm_data_hibin->Divide(h_zmm_mcjet_hibin);
   if (fChain == 0) return;
   Long64_t nentries = fChain->GetEntriesFast();
   TFile * fout = new TFile(outfname.data(),"recreate");
@@ -19,27 +23,35 @@ void ztree::Loop(std::string outfname , std::string tag)
   TH1D * hzmass = new TH1D(Form("hzmass_%s",tag.data()),";Z p_{T}",60,60,120);
   TH2D * hdptdr = new TH2D("hdptdr",";#Deltap_{T};#DeltaR",100,-2.5,2.5,100,0,1);
 
-  int jetptbins[] = {30,40,60,1000};
+  int jetptbins[] = {30,40,50,1000};
   const int njetbins = 3;
   
   TH1D * hnTrkincone[njetbins];
   TH1D * hnTrkoutcone[njetbins];
+  TH1D * htotalPtincone[njetbins];
+  TH1D * htotalPtoutcone[njetbins];
   TH1D * htrkPtincone[njetbins];
   TH1D * htrkPtoutcone[njetbins];
   TH1D * hnjets[njetbins];
   TH1D * hjetpt[njetbins];
   TH1D * hjeteta[njetbins];
   TH1D * hjetphi[njetbins];
+  TH1D * hhiBin[njetbins];
+  TH1D * hhiBinWeighted[njetbins];
   for(int k = 0 ; k < njetbins ; ++k)
   {
     hnTrkincone[k] = new TH1D(Form("hnTrkincone_%s_jt%d_%d",tag.data(),jetptbins[k],jetptbins[k+1]),";nTrk #DeltaR<0.4;",100,0,50);
-    hnTrkoutcone[k] = new TH1D(Form("hnTrkoutcone_%s_jt%d_%d",tag.data(),jetptbins[k],jetptbins[k+1]),";nTrk #DeltaR<0.4;",100,0,50);
+    hnTrkoutcone[k] = new TH1D(Form("hnTrkoutcone_%s_jt%d_%d",tag.data(),jetptbins[k],jetptbins[k+1]),";nTrk #DeltaR>0.4;",100,0,50);
+    htotalPtincone[k] = new TH1D(Form("htotalPtincone_%s_jt%d_%d",tag.data(),jetptbins[k],jetptbins[k+1]),";#Sigmap_{T} #DeltaR<0.4;",100,0,50);
+    htotalPtoutcone[k] = new TH1D(Form("htotalPtoutcone_%s_jt%d_%d",tag.data(),jetptbins[k],jetptbins[k+1]),";#Sigmap_{T} #DeltaR>0.4;",100,0,50);
     htrkPtincone[k] = new TH1D(Form("htrkPtincone_%s_jt%d_%d",tag.data(),jetptbins[k],jetptbins[k+1]),";p_{T} #DeltaR<0.4;",100,0,50);
     htrkPtoutcone[k] = new TH1D(Form("htrkPtoutcone_%s_jt%d_%d",tag.data(),jetptbins[k],jetptbins[k+1]),";p_{T} #DeltaR>0.4;",100,0,50);
     hnjets[k] = new TH1D(Form("hnjets_%s_jt%d_%d",tag.data(),jetptbins[k],jetptbins[k+1]),"",1,0,2);
     hjetpt[k] = new TH1D(Form("hjetpt_%s_jt%d_%d",tag.data(),jetptbins[k],jetptbins[k+1]),"",25,0,100);
     hjeteta[k] = new TH1D(Form("hjeteta_%s_jt%d_%d",tag.data(),jetptbins[k],jetptbins[k+1]),"",100,-2.5,2.5);
     hjetphi[k] = new TH1D(Form("hjetphi_%s_jt%d_%d",tag.data(),jetptbins[k],jetptbins[k+1]),"",100,-TMath::Pi(),TMath::Pi());
+    hhiBin[k] = new TH1D(Form("hhiBin_%s_jt%d_%d",tag.data(),jetptbins[k],jetptbins[k+1]),";hiBin;",200,0,200);
+    hhiBinWeighted[k] = new TH1D(Form("hhiBinWeighted_%s_jt%d_%d",tag.data(),jetptbins[k],jetptbins[k+1]),";hiBin;",200,0,200);
   }
   std::vector< std::vector< int > > jetindecies ( njetbins, std::vector<int> ( 0, 0 ) );
   // std::cout<<jetindecies.size()<<" "<<jetindecies[2].size()<<std::endl;
@@ -58,8 +70,12 @@ void ztree::Loop(std::string outfname , std::string tag)
     
     hnTrkincone[k]->Sumw2();
     hnTrkoutcone[k]->Sumw2();
+    htotalPtincone[k]->Sumw2();
+    htotalPtoutcone[k]->Sumw2();
     htrkPtincone[k]->Sumw2();
     htrkPtoutcone[k]->Sumw2();
+    hhiBin[k]->Sumw2();
+    hhiBinWeighted[k]->Sumw2();
   }
   
   Long64_t nbytes = 0, nb = 0;
@@ -68,7 +84,14 @@ void ztree::Loop(std::string outfname , std::string tag)
     if (ientry < 0) break;
     nb = fChain->GetEntry(jentry);   nbytes += nb;
     // if (Cut(ientry) < 0) continue;
-    if(weight==0)                   weight=1;
+    if(weight==0)
+    {
+      weight=1; //data has MC weight = 0 in the tree
+    }
+    else if(hiBin>-1) //no centrality weight for pp mc
+    {
+      // weight *= h_zmm_data_hibin->GetBinContent(h_zmm_data_hibin->FindBin(hiBin));
+    }
     if(Zpt < 40) continue;
     hzpt->Fill(Zpt,weight);
     hzmass->Fill(Zmass,weight);
@@ -96,6 +119,8 @@ void ztree::Loop(std::string outfname , std::string tag)
         int jidx = jetindecies[k][j];
         int ntrkincone = 0 ;
         int ntrkoutcone = 0 ;
+        float totalptincone = 0;
+        float totalptoutcone = 0;
         for(int i = 0 ; i < nTrk ; ++i)
         {
           hdphi->Fill(getDphi(Zlepton1Phi,trkPhi[i]));
@@ -124,17 +149,23 @@ void ztree::Loop(std::string outfname , std::string tag)
           {
             ntrkincone++;
             htrkPtincone[k]->Fill(trkPt[i],weight);
+            totalptincone+=trkPt[i];
           }
           if(dRcone < jetradius)
           {
             ntrkoutcone++;
             htrkPtoutcone[k]->Fill(trkPt[i],weight);
+            totalptoutcone+=trkPt[i];
           }
         }
         hnTrkincone[k]->Fill(ntrkincone,weight);
         hnTrkoutcone[k]->Fill(ntrkoutcone,weight);
+        htotalPtincone[k]->Fill(totalptincone,weight);
+        htotalPtoutcone[k]->Fill(totalptoutcone,weight);
         jetindecies[k].clear(); //clean up vector for next iteration
       }
+      hhiBin[k]->Fill(hiBin);
+      hhiBinWeighted[k]->Fill(hiBin,weight);
     }
   }
   

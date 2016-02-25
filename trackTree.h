@@ -1,5 +1,5 @@
-   const static int NTRK = 100000 ; // 53122
-   const static int NVTX = 100 ; // 53122
+   const static int NTRK = 1000000 ; // 53122
+   const static int NVTX = 1000 ; // 53122
    // Declaration of leaf types
 
       //if((trkPt[i]-2*trkPtError[i])*TMath::CosH(trkEta[i])>15 && (trkPt[i]-2*trkPtError[i])*TMath::CosH(trkEta[i])>pfHcal[i]+pfEcal[i]) continue;} //Calo Matching
